@@ -1,16 +1,4 @@
-// Data.h
-// ---------------------------------------------------------------------------
-// WHAT   The World Bank data (year 2023) written directly into the program:
-//        217 countries, 5 numbers each.  No data file is needed, so there is
-//        no file-path problem on any computer.
-//
-// HOW IT WAS MADE   tools/prepare_data.py cleaned the 200 MB World Bank file,
-//        then tools/make_data_h.py turned the result into this file.  You never
-//        edit it by hand.
-//
-// MISSING means "the World Bank has no value".  Each line is:
-//   name, 3-letter code, GDP per capita, growth, inflation, unemployment, debt
-// ---------------------------------------------------------------------------
+
 #pragma once
 #include <vector>
 #include "Country.h"
@@ -244,7 +232,7 @@ const DataRow DATA[] = {
 const int DATA_COUNT = sizeof(DATA) / sizeof(DATA[0]);
 
 
-// Turn the table above into a vector of Country objects.
+
 inline vector<Country> builtInCountries() {
     vector<Country> countries;
     for (int i = 0; i < DATA_COUNT; i++) {
