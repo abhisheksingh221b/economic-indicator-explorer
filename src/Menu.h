@@ -1,14 +1,3 @@
-// Menu.h
-// ---------------------------------------------------------------------------
-// WHAT   Everything the user SEES and TYPES: the menu and the tables.
-//        All the real work (searching, ranking, warnings) is done by
-//        QueryEngine.  The Menu only asks it and prints the answer.
-//
-// The file has four parts:
-//   1. asking the user for input
-//   2. printing tables
-//   3. the three features (one function each)
-// ---------------------------------------------------------------------------
 #pragma once
 #include <iomanip>
 #include <iostream>
@@ -16,21 +5,16 @@
 #include <vector>
 #include "QueryEngine.h"
 
-
-// The longest table we print.  A longer list is cut off with "... and N more".
 const int MAX_ROWS = 50;
-
 
 class Menu {
 public:
     Menu(QueryEngine& e) : engine(e) {
-        // Set the green/yellow/red lines for every indicator (they stay fixed).
         for (int ind = 0; ind < NUM_INDICATORS; ind++) {
             thr[ind] = defaultThreshold(ind);
         }
     }
 
-    // Show the menu again and again until the user chooses 0.
     void run() {
         while (true) {
             cout << "\n=========== ECONOMIC INDICATOR EXPLORER ===========\n";
@@ -52,19 +36,9 @@ public:
     }
 
 private:
-    QueryEngine& engine;                 // does all the real work
-    Threshold    thr[NUM_INDICATORS];    // the yellow/red lines of each indicator
+    QueryEngine& engine;
+    Threshold    thr[NUM_INDICATORS];
 
-    // =======================================================================
-    // 1. ASKING THE USER
-    // Each helper keeps asking until the user types something valid, so wrong
-    // input never crashes the program.
-    // How cin works: "cin >> x" reads a value into x.  If the user types
-    // letters where a number is expected, cin goes into an error state
-    // (cin.fail() is true).  We then clear the error and throw the line away.
-    // =======================================================================
-
-    // Ask for a whole number from low to high.
     int askInt(string question, int low, int high) {
         int number;
         while (true) {
@@ -72,11 +46,11 @@ private:
             cin >> number;
 
             if (cin.fail()) {
-                if (cin.eof()) exit(0);       // there is no more input: stop the program
-                cin.clear();                  // clear the error state
-                cin.ignore(1000, '\n');       // throw away what was typed
+                if (cin.eof()) exit(0);
+                cin.clear();
+                cin.ignore(1000, '\n');
             } else {
-                cin.ignore(1000, '\n');       // throw away the rest of the line
+                cin.ignore(1000, '\n');
                 if (number >= low && number <= high) {
                     return number;
                 }
@@ -85,7 +59,6 @@ private:
         }
     }
 
-    // Ask for any number, such as 5.5 or -3.
     double askNumber(string question) {
         double number;
         while (true) {
@@ -104,19 +77,14 @@ private:
         }
     }
 
-    // Ask for a line of text (a country name can contain spaces).
     string askText(string question) {
         cout << question << ": ";
         string text;
         getline(cin, text);
-        if (cin.fail()) exit(0);              // there is no more input: stop the program
+        if (cin.fail()) exit(0);
         return text;
     }
 
-    // Show the list of indicators and let the user pick one.
-    // "first" is the first number offered: 1 shows all five, 2 hides GDP per
-    // capita (the early warning has no warning lines for GDP).
-    // Returns the indicator number 0 to 4.
     int pickIndicator(int first) {
         for (int i = first - 1; i < NUM_INDICATORS; i++) {
             cout << "  " << (i + 1) << "  " << INDICATOR_NAME[i] << "\n";
@@ -125,13 +93,10 @@ private:
         return number - 1;
     }
 
-    // Ask for a country name and find it with the hash table.  If there is no
-    // such country, suggest similar names ("Somalia" -> "Somalia, Fed. Rep.").
-    // Returns nullptr when nothing was found.
     Country* askForCountry() {
         string name = askText("Country name");
 
-        Country* country = engine.lookup(name);          // the hash table finds it
+        Country* country = engine.lookup(name);
         if (country != nullptr) {
             return country;
         }
@@ -149,14 +114,6 @@ private:
         return nullptr;
     }
 
-    // =======================================================================
-    // 2. PRINTING
-    // How columns work: "setw(10)" makes the NEXT thing printed take up 10
-    // characters.  "right" puts the extra spaces before it, "left" after it.
-    // =======================================================================
-
-    // The WORD that belongs to a status.  The program prints words only (no
-    // colours), so it looks the same on every computer and terminal.
     const char* wordOf(Status s) {
         if (s == GREEN)  return "GREEN";
         if (s == YELLOW) return "YELLOW";
@@ -164,9 +121,6 @@ private:
         return "NO DATA";
     }
 
-    // Print one number, 10 characters wide.
-    // A missing value is printed as "-".  GDP per capita is a big number, so it
-    // gets no decimals; the other indicators get 2.
     void printNumber(double value, int ind) {
         int decimals = 2;
         if (ind == GDP) decimals = 0;
@@ -180,14 +134,11 @@ private:
         normalNumbers();
     }
 
-    // "fixed" and "setprecision" stay switched on until we switch them off.
-    // This puts numbers back to normal (6 prints as 6, not 6.00).
     void normalNumbers() {
         cout.unsetf(ios::fixed);
         cout.precision(6);
     }
 
-    // The heading line of a table of countries.
     void printHeader() {
         cout << left << setw(6) << "  #" << setw(30) << "Country" << right;
         for (int i = 0; i < NUM_INDICATORS; i++) {
@@ -197,7 +148,6 @@ private:
         cout << string(86, '-') << "\n";
     }
 
-    // One row of the table: rank, country name, the five numbers.
     void printRow(int rank, const Country* c) {
         string rankText = "  " + to_string(rank);
         cout << left << setw(6) << rankText << setw(30) << c->name;
@@ -208,7 +158,6 @@ private:
         cout << "\n";
     }
 
-    // Print a whole list of countries as a table (at most MAX_ROWS rows).
     void printList(const vector<Country*>& list) {
         if (list.empty()) {
             cout << "  (no countries found)\n";
@@ -226,11 +175,6 @@ private:
         cout << "  Found: " << list.size() << " countries.\n";
     }
 
-    // =======================================================================
-    // 3. THE THREE FEATURES
-    // =======================================================================
-
-    // ---- Feature 1: country lookup (uses the hash table) ----
     void lookup() {
         Country* c = askForCountry();
         if (c == nullptr) return;
@@ -242,24 +186,21 @@ private:
             printNumber(c->get(i), i);
 
             if (thr[i].used) {
-                // This indicator has warning lines: show the status as a word.
                 Status s = statusOf(c->get(i), thr[i]);
                 cout << "   [" << wordOf(s) << "]";
             } else if (!c->has(i)) {
-                // GDP per capita has no warning lines, but we still say when it is missing.
                 cout << "   [NO DATA]";
             }
             cout << "\n";
         }
     }
 
-    // ---- Feature 2: range filter (uses a BST) ----
     void rangeFilter() {
         int ind = pickIndicator(1);
         double low  = askNumber("Lowest value");
         double high = askNumber("Highest value");
 
-        if (low > high) {                                 // typed the wrong way round: swap them
+        if (low > high) {
             double temp = low;
             low = high;
             high = temp;
@@ -269,13 +210,11 @@ private:
         printList(engine.rangeFilter(ind, low, high));
     }
 
-    // ---- Feature 3: early warning dashboard (uses BSTs) ----
     void earlyWarning() {
-        int ind = pickIndicator(2);              // 2 = start at growth (GDP per capita has no warning lines)
+        int ind = pickIndicator(2);
 
-        showThresholds(ind);                     // tell the user which lines are used
+        showThresholds(ind);
 
-        // Ask the engine and print the answer.
         Warning w = engine.earlyWarning(ind, thr[ind]);
 
         cout << "\nEARLY WARNING: " << INDICATOR_NAME[ind] << "\n";
@@ -286,13 +225,11 @@ private:
         cout << "  YELLOW : " << w.yellow.size() << " countries\n";
         printList(w.yellow);
 
-        // Green countries are only counted; a list of 100 "fine" countries would hide the important ones.
         cout << "  GREEN  : " << w.green << " countries (not listed)\n";
         cout << "  NO DATA: " << w.noData << " countries\n";
         cout << "  A flag means 'look closer', not 'a crisis will happen'.\n";
     }
 
-    // Print the yellow/red lines of one indicator.
     void showThresholds(int ind) {
         const Threshold& t = thr[ind];
         cout << "  Current limits for " << INDICATOR_NAME[ind] << ":\n";
